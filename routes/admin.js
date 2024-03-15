@@ -4,8 +4,10 @@ const prisma = require("../db/db")
 const multer = require("multer")
 const router = express.Router()
 const path = require("path")
+const jwt = require("jsonwebtoken");
 const cloudinary = require("cloudinary").v2;
 const fs = require("fs")
+const JWT_SECRET = require("../config")
 
 
 //cloudinary configuration
@@ -33,6 +35,86 @@ const upload = multer({storage : storage});
 
 const uploadMiddleware = upload.array('productImages', 5)
 
+
+
+
+router.post("/signup" , async(req, res) => {
+    console.log("request hit");
+    const { username, email, password } = req.body;
+
+
+    const usernameExists = await prisma.admin.findUnique({
+        where : {
+            username : username
+        }
+    })
+
+    if(usernameExists){
+        return res.status(400).json({
+            msg : "Username already taken, give different username."
+        })
+    }
+
+    const emailExists = await prisma.admin.findUnique({
+        where : {
+            email : email
+        }
+    })
+
+    if(emailExists){
+        return res.status(400).json({
+            msg : "Email already exists, use different email ID."
+        })
+    }
+
+    const newAdmin = await prisma.admin.create({
+        data : {
+            username : username,
+            email : email,
+            password : password
+        }
+    })
+
+    if(newAdmin){
+        const token = jwt.sign(newAdmin.username, JWT_SECRET)
+        return res.status(200).json({
+            msg : "New admin created successfully",
+            token : token
+        });
+    } else {
+        return res.send("Admin not created")
+    }
+})
+
+
+//////////
+router.post("/login", async (req,res) => {
+    const {username, password} = req.body;
+
+    const admin = await prisma.admin.findUnique({
+        where : {
+            username : username
+        }
+    })
+
+    if(admin){
+        if(admin.password == password){
+            const token = jwt.sign(admin.username, JWT_SECRET)
+            return res.status(200).json({
+                msg : "Login Successfull.",
+                token : token
+            })
+        } else {
+            return res.status(400).json({
+                msg : "Wrong password."
+            })
+        }
+    } else {
+        return res.status(400).json({
+            msg : "Admin not found, check your username."
+        })
+    }
+})
 
 //Endpoint to add the product and images related to that product in the database 
 router.post("/addproduct", uploadMiddleware, adminAuthMiddleware,async (req, res) => {

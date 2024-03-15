@@ -23,9 +23,8 @@ model Admin {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 
-  userId Int?  @unique
-  user User? @relation(fields: [userId], references: [id])
-  
+  // userId Int @unique
+  // user User @relation(fields: [userId], references: [id])
 }
 model User {
   id Int @id @default(autoincrement())
@@ -35,6 +34,7 @@ model User {
   firstName String?
   lastName String?
   address String?
+  isAdmin Boolean? @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 
@@ -44,10 +44,7 @@ model User {
   //defining many to many relationship with products for liked products
   likedProducts likedProducts[]
 
-  //link to the admin table (one to one relationship)
-  adminId Int? @unique
-  admin Admin? @relation(fields: [adminId], references: [id])
-  
+  // admin Admin?
 }
 
 model Product {

@@ -43,15 +43,15 @@ async function adminAuthMiddleware(req, res, next) {
         // console.log(decoded);
         req.username = decoded;
 
-        const user = await prisma.user.findUnique({
+        const admin = await prisma.admin.findUnique({
             where : {
                 username : req.username
             }
         })
     
-        if(!user.isAdmin){
+        if(!admin){
             return res.status(401).json({
-                msg : "You are not authorized as admin."
+                msg : "You are not an admin."
             })
         } else {
             next();
