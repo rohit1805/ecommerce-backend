@@ -1,0 +1,142 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id Int @id @default(autoincrement())
+  username String @unique
+  email String @unique
+  password String
+  firstName String?
+  lastName String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  userId Int?  @unique
+  user User? @relation(fields: [userId], references: [id])
+  
+}
+model User {
+  id Int @id @default(autoincrement())
+  username String @unique
+  email String @unique
+  password String
+  firstName String?
+  lastName String?
+  address String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  //defin one to many relationship with orders
+  orders Order[]
+
+  //defining many to many relationship with products for liked products
+  likedProducts likedProducts[]
+
+  //link to the admin table (one to one relationship)
+  adminId Int? @unique
+  admin Admin? @relation(fields: [adminId], references: [id])
+  
+}
+
+model Product {
+  id Int @id @default(autoincrement())
+  name String
+  description String?
+  price Float
+  category String
+  stock Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  
+  //define one to many relationship with liked products'
+  likedProducts likedProducts[]
+
+  //define one to many relationship with product images
+  images ProductImage[]
+
+  // define one to many relationship with orderitem
+  orderitem OrderItem[]
+}
+
+model likedProducts {
+  id Int @id @default(autoincrement())
+  userId Int
+  productId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+
+  user User @relation(fields: [userId], references: [id])
+
+  product Product @relation(fields: [productId], references: [id])
+
+}
+
+model Order {
+  id Int @id @default(autoincrement())
+  userId Int
+  totalAmount Float
+  status String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  //define many to one relationship with user
+  user User @relation(fields: [userId], references: [id])
+
+  //define one-to-many relationship with order items
+  orderItems OrderItem[]
+
+  //define one to one relationship with payment
+  payment Payment?
+}
+
+model OrderItem {
+  id Int @id @default(autoincrement())
+  orderId Int 
+  productId Int
+  quantity Int
+  price Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  // define many to one relation with order
+  order Order @relation(fields: [orderId], references: [id])
+
+  //define many to one relationship with product
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model ProductImage {
+  id Int @id @default(autoincrement())
+  productId Int
+  imageUrl String
+  createdAt DateTime @default(now()) 
+  updatedAt DateTime @default(now()) 
+
+  //define many to one relationship with product
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model Payment {
+  id Int @id @default(autoincrement())
+  orderId Int @unique
+  amount Float
+  method String
+  status String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+}
