@@ -1,7 +1,7 @@
 const express = require("express")
 const prisma = require("../db/db")
 const { route } = require("./admin")
-const { authMiddleware } = require("../middleware/authentication")
+const { userAuthMiddleware } = require("../middleware/authentication")
 
 const router = express.Router()
 
@@ -109,8 +109,38 @@ router.get("/kids-clothing", async(req, res) => {
 })
 
 //endpoint to add product to cart
-router.post("/addtocart/:id"), authMiddleware, async(req, res) => {
-    
+router.post("/addtocart"), userAuthMiddleware, async(req, res) => {
+    const username = req.username;
+    const {productId, quantity} = req.body;
+
+    try {
+        const product = await prisma.product.findUnique({
+            where : { id : productId } 
+        })
+
+        if(!product){
+            return res.status(404).json({
+                msg : "Product not found"
+            })
+        }
+
+        const user = await prisma.user.findUnique({
+            where : {username : username}
+        });
+
+        if(!user){
+            return res.status(404).json({
+                msg : "user not found when adding product to the cart"
+            })
+        }
+
+        //find or create an order for the user
+        let order = await prisma.order.findFirst({
+            where : { userId : user.id}
+        })
+    } catch (error) {
+        
+    }
 }
 
 module.exports = router;

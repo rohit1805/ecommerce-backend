@@ -190,8 +190,38 @@ router.post("/addproduct", uploadMiddleware, adminAuthMiddleware,async (req, res
 })
 
 // Endpoint to update the product details
-// router.put("/updateproduct", authMiddleware, async(req,res) => {
-
+// router.put("/updateproduct", adminAuthMiddleware, async(req,res) => {
+//     const {}
 // })
+
+
+// Endpoint to delete the product from the database
+router.post("/deleteproduct", adminAuthMiddleware, async (req, res) => {
+    const {productId} = req.body;
+    console.log(productId);
+    try {
+        await prisma.productImage.deleteMany({
+            where : {
+                productId : productId
+            }
+        })
+
+
+        await prisma.product.delete({
+            where : {
+                id : productId
+            }
+        })
+
+        res.status(200).json({
+            msg :  `Product with product id : ${productId} and associated images deleted successfully.`
+        })
+    } catch (error) {
+        console.log("Error while deleting the product : ",error);
+        res.status(500).json({
+            msg : "Failed to delete the product."
+        })
+    }
+})
 
 module.exports = router;

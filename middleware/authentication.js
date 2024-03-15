@@ -27,6 +27,7 @@ function userAuthMiddleware(req, res, next){
 }
 
 async function adminAuthMiddleware(req, res, next) { 
+    console.log("adminauth migddle");
     const authHeader = req.headers.authorization;
     // console.log(authHeader);
     if(!authHeader || !authHeader.startsWith("Bearer ")){
@@ -40,7 +41,7 @@ async function adminAuthMiddleware(req, res, next) {
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        // console.log(decoded);
+        console.log(decoded);
         req.username = decoded;
 
         const admin = await prisma.admin.findUnique({
