@@ -3,6 +3,7 @@ const JWT_SECRET = require("../config");
 const prisma = require("../db/db");
 
 function userAuthMiddleware(req, res, next){
+    console.log("hitting user auth middleware");
     const authHeader = req.headers.authorization;
     // console.log(authHeader);
     if(!authHeader || !authHeader.startsWith("Bearer ")){

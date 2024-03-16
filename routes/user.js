@@ -111,8 +111,48 @@ router.put("/updateProfile", userAuthMiddleware, async (req, res) => {
             msg : "user not found"
         })
     }
+})
 
+//Endpoint for user to view the products present in the cart
+router.post("/showcart", userAuthMiddleware, async (req, res) => {
+    const username = req.username;
+    try {
+        const user = await prisma.user.findUnique({
+            where : {
+                username : username
+            }
+        })
 
+        if(!user){
+            return res.status(404).json({
+                msg:"User not found."
+            })
+        }
+
+        const cartItems = await prisma.cart.findMany({
+            where : {
+                userId : user.id
+            },
+            include : {
+                product : {
+                    include : {
+                        images : {
+                            take : 1
+                        }
+                    }
+                }
+            }
+        })
+
+        res.status(200).json({
+            Products : cartItems
+        })
+    } catch (error) {
+        console.log("Error while fetching the products form the cart.", error);
+        return res.status(500).json({
+            msg : "Failed to load cart products"
+        })
+    }
 })
 
 module.exports = router;
