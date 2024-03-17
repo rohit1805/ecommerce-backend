@@ -361,4 +361,120 @@ router.post("/removeonefromcart", userAuthMiddleware, async (req, res) => {
     }
 })
 
+//Endpoint to wishlist the product
+router.post("/addtowishlist", userAuthMiddleware, async(req, res) => {
+    const username = req.username;
+    const {productId} = req.body;
+    // console.log(productId);
+    try {
+        const user = await prisma.user.findUnique({
+            where : {username : username}
+        });
+
+        if(!user){
+            return res.status(404).json({
+                msg : "user not found when adding product to the cart"
+            })
+        }
+
+        const product = await prisma.product.findUnique({ 
+            where : {
+                id : productId
+            }
+        })
+
+        if(!product){
+            return res.status(404).json({
+                msg : "Product not found."
+            })
+        }
+
+        const wishlistProduct = await prisma.likedProducts.create({
+            data : {
+                userId : user.id,
+                productId : productId
+            },
+            include : {
+                product : {
+                    select : {
+                        name : true
+                    }
+                }
+            }
+        })
+
+        console.log("Wishlisted product : ", wishlistProduct);
+        return res.status(200).json({
+            msg : "Product added to wishlist."
+        })
+
+    } catch (error) {
+        console.log("Error while adding product to wishlist : ",error);
+        return res.status(500).json({
+            msg : "Failed to wishlist product."
+        })
+    }
+})
+
+
+//Endpoint to remove the product form wishlist
+router.post("/removefromwishlist", userAuthMiddleware, async(req, res) => {
+    const username = req.username;
+    const {productId} = req.body;
+    console.log(productId);
+    try {
+        const user = await prisma.user.findUnique({
+            where : {username : username}
+        });
+
+        if(!user){
+            return res.status(404).json({
+                msg : "user not found when adding product to the cart"
+            })
+        }
+
+        const product = await prisma.product.findUnique({ 
+            where : {
+                id : productId
+            }
+        })
+
+        if(!product){
+            return res.status(404).json({
+                msg : "Product not found."
+            })
+        }
+
+        const wishlistedProduct = await prisma.likedProducts.findFirst({
+            where : {
+                userId : user.id,
+                productId : productId
+            }
+        }) 
+
+        if(!wishlistedProduct){
+            return res.status(404).json({
+                msg : "Product not found in wishlist."
+            })
+        }
+
+        const removedProduct = await prisma.likedProducts.delete({
+            where : {
+                id : wishlistedProduct.id
+            }
+        })
+
+        console.log("Wishlisted product : ", removedProduct);
+        return res.status(200).json({
+            msg : "Product removed fromw wishlist."
+        })
+
+    } catch (error) {
+        console.log("Error while adding product to wishlist : ",error);
+        return res.status(500).json({
+            msg : "Failed to wishlist product."
+        })
+    }
+})
+
 module.exports = router;

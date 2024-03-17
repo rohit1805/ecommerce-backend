@@ -155,4 +155,47 @@ router.post("/showcart", userAuthMiddleware, async (req, res) => {
     }
 })
 
+
+// Endpoint to show wishlist products
+router.post("/showwishlist", userAuthMiddleware, async (req, res) => {
+    const username = req.username;
+    try {
+        const user = await prisma.user.findUnique({
+            where : {
+                username : username
+            }
+        })
+
+        if(!user){
+            return res.status(404).json({
+                msg:"User not found."
+            })
+        }
+
+        const wishlistedProduct = await prisma.likedProducts.findMany({
+            where : {
+                userId : user.id
+            },
+            include : {
+                product : {
+                    include : {
+                        images : {
+                            take : 1
+                        }
+                    }
+                }
+            }
+        })
+
+        res.status(200).json({
+            Wishlisted_Products : wishlistedProduct
+        })
+    } catch (error) {
+        console.log("Error while fetching the wishlist products :", error);
+        return res.status(500).json({
+            msg : "Failed to load wishlisted products"
+        })
+    }
+})
+
 module.exports = router;
